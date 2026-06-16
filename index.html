@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>s ai - The Visionary Dev</title>
+    <style>
+        /* ফন্ট ও বেসিক রিসেট */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* ডার্ক পার্পেল/ব্লু ফিউচারিস্টিক ব্যাকগ্রাউন্ড */
+        body {
+            background: linear-gradient(135deg, #0b0f19 0%, #1a1632 100%);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* টপ বার (সেটিংস বাটন) */
+        header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        #api-key-btn {
+            background: rgba(111, 66, 193, 0.2);
+            border: 1px solid #6f42c1;
+            color: #e0d4ff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        #api-key-btn:hover {
+            background: #6f42c1;
+            color: white;
+            box-shadow: 0 0 10px #6f42c1;
+        }
+
+        /* চ্যাট বক্স এরিয়া */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        /* হোম/ওয়েলকাম স্ক্রিন (তোমার দেওয়া স্ক্রিনশটের মতো) */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            transition: opacity 0.5s;
+        }
+
+        .robot-avatar {
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, #8957ff 0%, #462596 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            box-shadow: 0 0 40px rgba(111, 66, 193, 0.5);
+            margin-bottom: 20px;
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(111, 66, 193, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(137, 87, 255, 0.8); }
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .s-ai-text {
+            color: #a072ff;
+            text-shadow: 0 0 10px rgba(160, 114, 255, 0.5);
+        }
+
+        .dev-badge {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #c9baff;
+            font-size: 1.2rem;
+        }
+
+        .dev-badge span {
+            color: #a072ff;
+            font-weight: bold;
+        }
+
+        .dev-desc {
+            color: #8c85a1;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* মেসেজ বাবলস */
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .user-msg {
+            background: linear-gradient(135deg, #533190 0%, #3e1e75 100%);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-msg {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-img-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* বট যখন চিন্তা করবে (Loading Indicator) */
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            color: #a072ff;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(160, 114, 255, 0.2);
+        }
+
+        /* নিচের ইনপুট এরিয়া */
+        .input-area {
+            display: flex;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-area input[type="text"] {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 15px;
+            border-radius: 25px;
+            outline: none;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .input-area input[type="text"]:focus {
+            border-color: #6f42c1;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(111, 66, 193, 0.3);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #a072ff;
+            font-size: 22px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(111, 66, 193, 0.1);
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.08);
+            background: #6f42c1;
+            color: white;
+            box-shadow: 0 0 10px #6f42c1;
+        }
+
+        #file-input { display: none; }
+
+        /* API Key সিকিউরিটি পপ-আপ (Modal) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 3, 13, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1a1632;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #6f42c1;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content h3 { margin-bottom: 10px; color: #a072ff; font-size: 1.4rem; }
+        .modal-content p { font-size: 13px; color: #aaa; margin-bottom: 20px; line-height: 1.4; }
+        .modal-content input {
+            width: 100%; padding: 12px 15px; margin-bottom: 15px;
+            border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0,0,0,0.4); color: white; outline: none; font-size: 14px;
+        }
+        .modal-content input:focus { border-color: #a072ff; }
+        .modal-content button {
+            background: linear-gradient(135deg, #6f42c1 0%, #4f23a1 100%);
+            color: white; border: none; padding: 12px; border-radius: 8px;
+            cursor: pointer; font-weight: bold; width: 100%; font-size: 15px; transition: 0.2s;
+        }
+        .modal-content button:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button id="api-key-btn">🔑 Set API Key</button>
+    </header>
+
+    <div class="chat-container" id="chat-box">
+        
+        <div class="welcome-screen" id="welcome-screen">
+            <div class="robot-avatar">🤖</div>
+            <div class="welcome-title">
+                Hello,<br>I'm <span class="s-ai-text">s ai</span>
+            </div>
+            <div class="dev-badge">
+                <span>&lt;/&gt;</span> I'm a Dev
+            </div>
+            <div class="dev-desc">I build cool things with code.</div>
+        </div>
+
+        <div class="typing-indicator" id="loading">s ai thinking... 🧠</div>
+    </div>
+
+    <div class="input-area">
+        <label for="file-input" class="icon-btn" title="Upload Photo">📸</label>
+        <input type="file" id="file-input" accept="image/*">
+        
+        <input type="text" id="user-input" placeholder="Ask me anything or upload a photo..." onkeypress="handleEnter(event)">
+        
+        <button class="icon-btn" onclick="sendMessage()" title="Send">➤</button>
+    </div>
+
+    <div class="modal" id="api-modal">
+        <div class="modal-content">
+            <h3>Secure API Setup</h3>
+            <p>Your API Key is safely saved in your browser's local storage. It will never leak online or on GitHub.</p>
+            <input type="password" id="api-key-input" placeholder="Paste Gemini API Key here (AIzaSy...)">
+            <button onclick="saveApiKey()">Save & Connect</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const fileInput = document.getElementById('file-input');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const apiModal = document.getElementById('api-modal');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const loading = document.getElementById('loading');
+        
+        let base64Image = null;
+        let imageMimeType = null;
+
+        // সাইট ওপেন হলে কি (Key) চেক করা
+        window.onload = () => {
+            const savedKey = localStorage.getItem('s_ai_api_key');
+            if (!savedKey) {
+                apiModal.style.display = 'flex';
+            }
+        };
+
+        // ম্যানুয়ালি কি সেট করার লজিক
+        document.getElementById('api-key-btn').addEventListener('click', () => {
+            apiModal.style.display = 'flex';
+            apiKeyInput.value = localStorage.getItem('s_ai_api_key') || '';
+        });
+
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('s_ai_api_key', key);
+                apiModal.style.display = 'none';
+                alert("API Key secured successfully!");
+            } else {
+                alert("Please enter a valid key!");
+            }
+        }
+
+        // ছবি সিলেক্ট এবং বেস-৬৪ কনভার্ট
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                base64Image = event.target.result.split(',')[1];
+                imageMimeType = file.type;
+                userInput.placeholder = "Image attached! Type your message and send...";
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        // স্ক্রিনে মেসেজ বাবল বসানো
+        function appendMessage(text, isUser, imgSrc = null) {
+            welcomeScreen.style.display = 'none'; // প্রথম মেসেজেই হোম স্ক্রিন হাইড হবে
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isUser ? 'user-msg' : 'ai-msg'}`;
+            
+            if (imgSrc) {
+                const img = document.createElement('img');
+                img.src = `data:${imageMimeType};base64,${imgSrc}`;
+                img.className = 'chat-img-preview';
+                msgDiv.appendChild(img);
+            }
+
+            const textP = document.createElement('div');
+            textP.innerText = text;
+            msgDiv.appendChild(textP);
+
+            // লোডিং বাবলটির ঠিক ওপরে মেসেজটি পুশ করা
+            chatBox.insertBefore(msgDiv, loading);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // এপিআই রিকোয়েস্ট এবং মেসেজ সেন্ডিং
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text && !base64Image) return;
+
+            const apiKey = localStorage.getItem('s_ai_api_key');
+            if (!apiKey) {
+                alert("API Key is missing! Set it using the 🔑 button.");
+                apiModal.style.display = 'flex';
+                return;
+            }
+
+            // ইউজারের মেসেজ ও ছবি স্ক্রিনে শো করা
+            appendMessage(text, true, base64Image);
+            
+            const promptText = text || "Describe this image.";
+            userInput.value = '';
+            userInput.placeholder = "Ask me anything or upload a photo...";
+            
+            // লোডিং অ্যানিমেশন অন করা
+            loading.style.display = 'block';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                // গুগলের লেটেস্ট Gemini 2.5 Flash Endpoint
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                
+                const parts = [{ text: promptText }];
+                if (base64Image) {
+                    parts.push({
+                        inlineData: { mimeType: imageMimeType, data: base64Image }
+                    });
+                }
+
+                const requestBody = { contents: [{ parts: parts }] };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error.message);
+
+                const aiReply = data.candidates[0].content.parts[0].text;
+                
+                // লোডিং বন্ধ করা
+                loading.style.display = 'none';
+                
+                // এআই এর রেসপন্স স্ক্রিনে দেখানো
+                appendMessage(aiReply, false);
+
+                // স্মার্ট ভয়েস আউটপুট (Text To Speech)
+                const speech = new SpeechSynthesisUtterance(aiReply);
+                speech.lang = 'en-US';
+                speech.pitch = 1.1; // কিউরেট ভয়েস টোন
+                window.speechSynthesis.speak(speech);
+
+            } catch (error) {
+                loading.style.display = 'none';
+                appendMessage(`❌ Error: ${error.message}`, false);
+            }
+
+            // ডেটা রিসেট
+            base64Image = null;
+            imageMimeType = null;
+            fileInput.value = '';
+        }
+    </script>
+
+</body>
+</html>
