@@ -25,34 +25,6 @@
             overflow: hidden;
         }
 
-        /* টপ বার (সেটিংস বাটন) */
-        header {
-            display: flex;
-            justify-content: flex-end;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(5px);
-            z-index: 10;
-        }
-
-        #api-key-btn {
-            background: rgba(111, 66, 193, 0.2);
-            border: 1px solid #6f42c1;
-            color: #e0d4ff;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        #api-key-btn:hover {
-            background: #6f42c1;
-            color: white;
-            box-shadow: 0 0 10px #6f42c1;
-        }
-
         /* চ্যাট বক্স এরিয়া */
         .chat-container {
             flex: 1;
@@ -223,51 +195,9 @@
         }
 
         #file-input { display: none; }
-
-        /* API Key সিকিউরিটি পপ-আপ (Modal) */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 3, 13, 0.85);
-            backdrop-filter: blur(6px);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: #1a1632;
-            padding: 30px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 400px;
-            border: 1px solid #6f42c1;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content h3 { margin-bottom: 10px; color: #a072ff; font-size: 1.4rem; }
-        .modal-content p { font-size: 13px; color: #aaa; margin-bottom: 20px; line-height: 1.4; }
-        .modal-content input {
-            width: 100%; padding: 12px 15px; margin-bottom: 15px;
-            border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0,0,0,0.4); color: white; outline: none; font-size: 14px;
-        }
-        .modal-content input:focus { border-color: #a072ff; }
-        .modal-content button {
-            background: linear-gradient(135deg, #6f42c1 0%, #4f23a1 100%);
-            color: white; border: none; padding: 12px; border-radius: 8px;
-            cursor: pointer; font-weight: bold; width: 100%; font-size: 15px; transition: 0.2s;
-        }
-        .modal-content button:hover { opacity: 0.9; transform: translateY(-1px); }
     </style>
 </head>
 <body>
-
-    <header>
-        <button id="api-key-btn">🔑 Set API Key</button>
-    </header>
 
     <div class="chat-container" id="chat-box">
         
@@ -294,51 +224,15 @@
         <button class="icon-btn" onclick="sendMessage()" title="Send">➤</button>
     </div>
 
-    <div class="modal" id="api-modal">
-        <div class="modal-content">
-            <h3>Secure API Setup</h3>
-            <p>Your API Key is safely saved in your browser's local storage. It will never leak online or on GitHub.</p>
-            <input type="password" id="api-key-input" placeholder="Paste Gemini API Key here (AIzaSy...)">
-            <button onclick="saveApiKey()">Save & Connect</button>
-        </div>
-    </div>
-
     <script>
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const fileInput = document.getElementById('file-input');
         const welcomeScreen = document.getElementById('welcome-screen');
-        const apiModal = document.getElementById('api-modal');
-        const apiKeyInput = document.getElementById('api-key-input');
         const loading = document.getElementById('loading');
         
         let base64Image = null;
         let imageMimeType = null;
-
-        // সাইট ওপেন হলে কি (Key) চেক করা
-        window.onload = () => {
-            const savedKey = localStorage.getItem('s_ai_api_key');
-            if (!savedKey) {
-                apiModal.style.display = 'flex';
-            }
-        };
-
-        // ম্যানুয়ালি কি সেট করার লজিক
-        document.getElementById('api-key-btn').addEventListener('click', () => {
-            apiModal.style.display = 'flex';
-            apiKeyInput.value = localStorage.getItem('s_ai_api_key') || '';
-        });
-
-        function saveApiKey() {
-            const key = apiKeyInput.value.trim();
-            if (key) {
-                localStorage.setItem('s_ai_api_key', key);
-                apiModal.style.display = 'none';
-                alert("API Key secured successfully!");
-            } else {
-                alert("Please enter a valid key!");
-            }
-        }
 
         // ছবি সিলেক্ট এবং বেস-৬৪ কনভার্ট
         fileInput.addEventListener('change', (e) => {
@@ -381,17 +275,10 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // এপিআই রিকোয়েস্ট এবং মেসেজ সেন্ডিং
+        // ভার্সেল এপিআই রিকোয়েস্ট এবং মেসেজ সেন্ডিং
         async function sendMessage() {
             const text = userInput.value.trim();
             if (!text && !base64Image) return;
-
-            const apiKey = localStorage.getItem('s_ai_api_key');
-            if (!apiKey) {
-                alert("API Key is missing! Set it using the 🔑 button.");
-                apiModal.style.display = 'flex';
-                return;
-            }
 
             // ইউজারের মেসেজ ও ছবি স্ক্রিনে শো করা
             appendMessage(text, true, base64Image);
@@ -405,8 +292,8 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // গুগলের লেটেস্ট Gemini 2.5 Flash Endpoint
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                // গুগলের ডিরেক্ট লিঙ্ক বদলে এখন আমাদের ফ্রি ভার্সেল সার্ভার লিঙ্ক
+                const url = `/api/chat`; 
                 
                 const parts = [{ text: promptText }];
                 if (base64Image) {
@@ -424,7 +311,6 @@
                 });
 
                 const data = await response.json();
-                
                 if (data.error) throw new Error(data.error.message);
 
                 const aiReply = data.candidates[0].content.parts[0].text;
@@ -438,7 +324,7 @@
                 // স্মার্ট ভয়েস আউটপুট (Text To Speech)
                 const speech = new SpeechSynthesisUtterance(aiReply);
                 speech.lang = 'en-US';
-                speech.pitch = 1.1; // কিউরেট ভয়েস টোন
+                speech.pitch = 1.1; // বয়ের মতো ভয়েস টোন
                 window.speechSynthesis.speak(speech);
 
             } catch (error) {
@@ -452,6 +338,5 @@
             fileInput.value = '';
         }
     </script>
-
 </body>
 </html>
