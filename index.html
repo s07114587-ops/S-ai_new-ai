@@ -39,7 +39,7 @@
         .input-area { display: flex; padding: 15px 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.05); gap: 10px; align-items: center; }
         .input-area input[type="text"] { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 15px; border-radius: 25px; outline: none; font-size: 15px; transition: 0.3s; }
         .input-area input[type="text"]:focus { border-color: #6f42c1; background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 10px rgba(111, 66, 193, 0.3); }
-        .icon-btn { background: none; border: none; color: #a072ff; font-size: 22px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border-radius: 50%; background: rgba(111, 66, 193, 0.1); }
+        .icon-btn { background: none; border: none; color: #a072ff; font-size: 22px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border-radius: 50%; background: rgba(11, 15, 25, 0.1); }
         .icon-btn:hover { transform: scale(1.08); background: #6f42c1; color: white; box-shadow: 0 0 10px #6f42c1; }
         #file-input { display: none; }
     </style>
@@ -55,4 +55,73 @@
         <button class="icon-btn" onclick="sendMessage()">➤</button>
     </div>
     <script>
-        const chatBox =
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const fileInput = document.getElementById('file-input');
+        const loading = document.getElementById('loading');
+        let base64Image = null; let imageMimeType = null;
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                base64Image = event.target.result.split(',')[1]; imageMimeType = file.type;
+                userInput.placeholder = "Image attached! Send message...";
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 💻 পিসির জন্য ফিক্সড এন্টার কী ফাংশন
+        function handleEnter(e) { 
+            if (e.key === 'Enter') {
+                e.preventDefault(); // পিসির ব্রাউজার ডিফল্ট অ্যাকশন থামানোর জন্য
+                sendMessage(); 
+            }
+        }
+
+        function appendMessage(text, isUser, imgSrc = null) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isUser ? 'user-msg' : 'ai-msg'}`;
+            if (imgSrc) {
+                const img = document.createElement('img'); img.src = `data:${imageMimeType};base64,${imgSrc}`;
+                img.className = 'chat-img-preview'; msgDiv.appendChild(img);
+            }
+            const textP = document.createElement('div'); textP.innerText = text; msgDiv.appendChild(textP);
+            chatBox.insertBefore(msgDiv, loading); chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim(); if (!text && !base64Image) return;
+            appendMessage(text, true, base64Image);
+            const promptText = text || "Describe this image.";
+            const cleanMessage = promptText.toLowerCase();
+            
+            userInput.value = ''; userInput.placeholder = "Ask me anything...";
+            loading.style.display = 'block'; chatBox.scrollTop = chatBox.scrollHeight;
+            try {
+                const response = await fetch(`/api/chat`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }, ...(base64Image ? [{ inlineData: { mimeType: imageMimeType, data: base64Image } }] : [])] }] })
+                });
+                const data = await response.json(); if (data.error) throw new Error(data.error.message);
+                
+                let aiReply = data.candidates[0].content.parts[0].text;
+                
+                // আইডেন্টিটি ফিল্টার
+                if (cleanMessage.includes("what is your name") || cleanMessage.includes("your name") || cleanMessage.includes("তোমার নাম ki") || cleanMessage.includes("তোমার নাম কি")) {
+                    aiReply = "My name is s ai! I am your smart AI assistant.";
+                } else if (cleanMessage.includes("who created you") || cleanMessage.includes("inventor") || cleanMessage.includes("creator") || cleanMessage.includes("তৈরি করেছে কে") || cleanMessage.includes("তোমার সৃষ্টিকর্তা কে")) {
+                    aiReply = "I was invented by the visionary developer Shubhomoy!";
+                } else {
+                    aiReply = aiReply.replace(/Gemini/gi, "s ai");
+                    aiReply = aiReply.replace(/Google/gi, "Shubhomoy");
+                }
+                
+                loading.style.display = 'none'; appendMessage(aiReply, false);
+                const speech = new SpeechSynthesisUtterance(aiReply); speech.lang = 'en-US'; window.speechSynthesis.speak(speech);
+            } catch (error) { loading.style.display = 'none'; appendMessage(`❌ Error: ${error.message}`, false); }
+            base64Image = null; imageMimeType = null; fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
