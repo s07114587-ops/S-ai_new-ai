@@ -51,13 +51,14 @@
     <div class="input-area">
         <label for="file-input" class="icon-btn" title="Upload Photo">📸</label>
         <input type="file" id="file-input" accept="image/*">
-        <input type="text" id="user-input" placeholder="Ask me anything..." onkeypress="handleEnter(event)">
-        <button class="icon-btn" onclick="sendMessage()">➤</button>
+        <input type="text" id="user-input" placeholder="Ask me anything...">
+        <button class="icon-btn" id="send-btn">➤</button>
     </div>
     <script>
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const fileInput = document.getElementById('file-input');
+        const sendBtn = document.getElementById('send-btn');
         const loading = document.getElementById('loading');
         let base64Image = null; let imageMimeType = null;
 
@@ -71,13 +72,17 @@
             reader.readAsDataURL(file);
         });
 
-        // 💻 পিসির জন্য ফিক্সড এন্টার কী ফাংশন
-        function handleEnter(e) { 
+        // 💻 পিসি এবং ফোনের জন্য ১০০% ফিক্সড ইভেন্ট লিসেনার (বাগ ফিক্সড)
+        userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // পিসির ব্রাউজার ডিফল্ট অ্যাকশন থামানোর জন্য
-                sendMessage(); 
+                e.preventDefault(); // ব্রাউজার রিলোড হওয়া আটকানোর জন্য
+                sendMessage();
             }
-        }
+        });
+
+        sendBtn.addEventListener('click', () => {
+            sendMessage();
+        });
 
         function appendMessage(text, isUser, imgSrc = null) {
             const msgDiv = document.createElement('div');
@@ -98,10 +103,17 @@
             
             userInput.value = ''; userInput.placeholder = "Ask me anything...";
             loading.style.display = 'block'; chatBox.scrollTop = chatBox.scrollHeight;
+
+            const requestParts = [{ text: promptText }];
+            if (base64Image) {
+                requestParts.push({ inlineData: { mimeType: imageMimeType, data: base64Image } });
+            }
+
             try {
                 const response = await fetch(`/api/chat`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }, ...(base64Image ? [{ inlineData: { mimeType: imageMimeType, data: base64Image } }] : [])] }] })
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: requestParts }] })
                 });
                 const data = await response.json(); if (data.error) throw new Error(data.error.message);
                 
