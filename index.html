@@ -3,12 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link class="favicon" rel="icon" type="image/png" href="111.png">
     <title>s ai - The Visionary Dev</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-        body { background: linear-gradient(135deg, #0b0f19 0%, #1a1632 100%); color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        
+        /* 💻 পিসির জন্য ডিফল্ট ব্যাকগ্রাউন্ড (1.png) */
+        body { 
+            background: url('1.png') no-repeat center center fixed; 
+            background-size: cover;
+            color: #ffffff; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            transition: background 0.3s ease;
+        }
+        
+        /* 📱 মোবাইলের জন্য রেসপন্সিভ ব্যাকগ্রাউন্ড (0.png) */
+        @media (max-width: 768px) {
+            body {
+                background: url('0.png') no-repeat center center fixed;
+                background-size: cover;
+            }
+        }
+        
+        /* চ্যাট এরিয়া হালকা ট্রান্সপারেন্ট */
+        .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; background: rgba(11, 15, 25, 0.4); }
         .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; transition: opacity 0.5s; }
         .robot-avatar { width: 140px; height: 140px; background: radial-gradient(circle, #8957ff 0%, #462596 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 60px; box-shadow: 0 0 40px rgba(111, 66, 193, 0.5); margin-bottom: 20px; animation: breathe 3s infinite ease-in-out; }
         @keyframes breathe { 0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(111, 66, 193, 0.5); } 50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(137, 87, 255, 0.8); } }
@@ -19,10 +41,10 @@
         .dev-desc { color: #8c85a1; font-size: 0.9rem; margin-top: 5px; }
         .message { max-width: 80%; padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
         .user-msg { background: linear-gradient(135deg, #533190 0%, #3e1e75 100%); align-self: flex-end; border-bottom-right-radius: 4px; }
-        .ai-msg { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .ai-msg { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); align-self: flex-start; border-bottom-left-radius: 4px; backdrop-filter: blur(5px); }
         .chat-img-preview { max-width: 100%; max-height: 200px; border-radius: 10px; margin-bottom: 10px; display: block; }
-        .typing-indicator { display: none; align-self: flex-start; padding: 12px 18px; background: rgba(255, 255, 255, 0.05); border-radius: 15px; color: #a072ff; font-size: 14px; font-weight: 600; border-bottom-left-radius: 4px; border: 1px solid rgba(160, 114, 255, 0.2); }
-        .input-area { display: flex; padding: 15px 20px; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.05); gap: 10px; align-items: center; }
+        .typing-indicator { display: none; align-self: flex-start; padding: 12px 18px; background: rgba(0, 0, 0, 0.6); border-radius: 15px; color: #a072ff; font-size: 14px; font-weight: 600; border-bottom-left-radius: 4px; border: 1px solid rgba(160, 114, 255, 0.2); }
+        .input-area { display: flex; padding: 15px 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.05); gap: 10px; align-items: center; }
         .input-area input[type="text"] { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 15px; border-radius: 25px; outline: none; font-size: 15px; transition: 0.3s; }
         .input-area input[type="text"]:focus { border-color: #6f42c1; background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 10px rgba(111, 66, 193, 0.3); }
         .icon-btn { background: none; border: none; color: #a072ff; font-size: 22px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border-radius: 50%; background: rgba(111, 66, 193, 0.1); }
@@ -82,6 +104,8 @@
             const text = userInput.value.trim(); if (!text && !base64Image) return;
             appendMessage(text, true, base64Image);
             const promptText = text || "Describe this image.";
+            const cleanMessage = promptText.toLowerCase();
+            
             userInput.value = ''; userInput.placeholder = "Ask me anything...";
             loading.style.display = 'block'; chatBox.scrollTop = chatBox.scrollHeight;
             try {
@@ -90,7 +114,19 @@
                     body: JSON.stringify({ contents: [{ parts: [{ text: promptText }, ...(base64Image ? [{ inlineData: { mimeType: imageMimeType, data: base64Image } }] : [])] }] })
                 });
                 const data = await response.json(); if (data.error) throw new Error(data.error.message);
-                const aiReply = data.candidates[0].content.parts[0].text;
+                
+                let aiReply = data.candidates[0].content.parts[0].text;
+                
+                // আইডেন্টিটি ফিল্টার
+                if (cleanMessage.includes("what is your name") || cleanMessage.includes("your name") || cleanMessage.includes("তোমার নাম কি")) {
+                    aiReply = "My name is s ai! I am your smart AI assistant.";
+                } else if (cleanMessage.includes("who created you") || cleanMessage.includes("inventor") || cleanMessage.includes("creator") || cleanMessage.includes("তৈরি করেছে কে") || cleanMessage.includes("তোমার সৃষ্টিকর্তা কে")) {
+                    aiReply = "I was invented by the visionary developer Shubhomoy!";
+                } else {
+                    aiReply = aiReply.replace(/Gemini/gi, "s ai");
+                    aiReply = aiReply.replace(/Google/gi, "Shubhomoy");
+                }
+                
                 loading.style.display = 'none'; appendMessage(aiReply, false);
                 const speech = new SpeechSynthesisUtterance(aiReply); speech.lang = 'en-US'; window.speechSynthesis.speak(speech);
             } catch (error) { loading.style.display = 'none'; appendMessage(`❌ Error: ${error.message}`, false); }
