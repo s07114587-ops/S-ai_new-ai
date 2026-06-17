@@ -71,9 +71,10 @@
             reader.readAsDataURL(file);
         });
 
+        // 💻 পিসির জন্য ফিক্সড এন্টার কী ফাংশন
         function handleEnter(e) { 
             if (e.key === 'Enter') {
-                e.preventDefault(); 
+                e.preventDefault(); // পিসির ব্রাউজার ডিফল্ট অ্যাকশন থামানোর জন্য
                 sendMessage(); 
             }
         }
