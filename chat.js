@@ -1,24 +1,103 @@
-// api/chat.js (CommonJS ফরম্যাটে নতুন কোড)
-module.exports = async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link class="favicon" rel="icon" type="image/png" href="111.png">
+    <title>s ai Pro - World's Most Private AI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        /* 🎯 পিসির জন্য ব্যাকগ্রাউন্ড (1.png) */
+        body { 
+            background: url('1.png') no-repeat center center fixed; 
+            background-size: cover;
+            color: #ffffff; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        /* 🎯 ফোনের জন্য ব্যাকগ্রাউন্ড (0.png) */
+        @media (max-width: 768px) {
+            body { 
+                background: url('0.png') no-repeat center center fixed; 
+                background-size: cover; 
+            }
+        }
+        
+        .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(11, 15, 25, 0.4); }
+        .message { max-width: 80%; padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
+        .user-msg { background: linear-gradient(135deg, #533190 0%, #3e1e75 100%); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai-msg { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); align-self: flex-start; border-bottom-left-radius: 4px; backdrop-filter: blur(5px); }
+        .typing-indicator { display: none; align-self: flex-start; padding: 12px 18px; background: rgba(0, 0, 0, 0.6); border-radius: 15px; color: #a072ff; font-size: 14px; font-weight: 600; border-bottom-left-radius: 4px; border: 1px solid rgba(160, 114, 255, 0.2); }
+        .input-area { display: flex; padding: 15px 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); gap: 10px; align-items: center; }
+        .input-area input[type="text"] { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 15px; border-radius: 25px; outline: none; font-size: 15px; }
+        .input-area input[type="text"]:focus { border-color: #6f42c1; background: rgba(255, 255, 255, 0.1); }
+        .icon-btn { background: none; border: none; color: #a072ff; font-size: 22px; cursor: pointer; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: #6f42c1; color: white; }
+    </style>
+</head>
+<body>
+    <div class="chat-container" id="chat-box">
+        <div class="typing-indicator" id="loading">s ai Pro thinking... ⚡</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Ask s ai Pro anything (১০০০ ট্রাফিক লোড রেডি)...">
+        <button class="icon-btn" id="send-btn">➤</button>
+    </div>
 
-    const apiKey = process.env.GEMINI_API_KEY; 
-    if (!apiKey) {
-        return res.status(500).json({ error: 'API Key missing in Vercel!' });
-    }
-    
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body)
-        });
+    <script>
+        // 🔗 তোমার আসল রেন্ডার ব্যাকঅ্যান্ড লিঙ্ক এখানে সাকসেসফুলি বসালাম 🚀
+        const RENDER_BACKEND_URL = "https://si-bakend.onrender.com"; 
 
-        const data = await response.json();
-        return res.status(200).json(data);
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-};
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const loading = document.getElementById('loading');
+
+        userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
+        sendBtn.addEventListener('click', () => { sendMessage(); });
+
+        function appendMessage(text, isUser) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isUser ? 'user-msg' : 'ai-msg'}`;
+            msgDiv.innerText = text;
+            chatBox.insertBefore(msgDiv, loading);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim(); if (!text) return;
+            appendMessage(text, true);
+            userInput.value = '';
+            loading.style.display = 'block';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                // রেন্ডার সিকিউর ব্যাকঅ্যান্ড সার্ভারে ডেটা পাঠানো হচ্ছে
+                const response = await fetch(`${RENDER_BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+                appendMessage(data.reply, false);
+                
+                // ভয়েস রেসপন্স
+                const speech = new SpeechSynthesisUtterance(data.reply); 
+                speech.lang = 'en-US'; 
+                window.speechSynthesis.speak(speech);
+
+            } catch (error) {
+                loading.style.display = 'none';
+                appendMessage("সার্ভার কানেকশন এরর মামা! রেন্ডার লিঙ্কটা চেক করো অথবা একটু পর ট্রাই করো।", false);
+            }
+        }
+    </script>
+</body>
+</html>
